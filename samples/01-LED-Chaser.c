@@ -3,7 +3,6 @@
 #include <stdint.h>
 #include CMSIS_device_header
 
-RCC_TypeDef *rcc_ptr = (RCC_TypeDef *)RCC_BASE;
 struct LED_INFO {
     char bank;
     uint8_t pin;
@@ -17,8 +16,8 @@ static inline void spin( volatile uint32_t tick ) {
 int main() {
 
     // Enable GPIOs in RCC APB2ENR
-    rcc_ptr->APB2ENR |= RCC_APB2ENR_IOPDEN;
-    rcc_ptr->APB2ENR |= RCC_APB2ENR_IOPBEN;
+    RCC->APB2ENR |= RCC_APB2ENR_IOPDEN;
+    RCC->APB2ENR |= RCC_APB2ENR_IOPBEN;
     // Set the target gpio output
     for ( uint8_t i = 0; i < 4; ++i ) {
         led_init(led_list[i].bank, led_list[i].pin);
