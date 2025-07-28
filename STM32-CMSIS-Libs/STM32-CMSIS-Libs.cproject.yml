@@ -1,16 +1,30 @@
 # A project translates into one executable or library.
 project:
-  
+
   groups:
     - group: Source Files
       files:
         - file: ./main.c
+        
+    - group: ST7789 Library
+      files:
+        - file: ./libs/st7789/driver_st7789_interface.c
+        - file: ./libs/st7789/simple_st7789_driver.c
+
+  # Add include paths for libraries
+  add-path:
+    - ./libs
+    - ./libs/st7789
 
   # List components to use for your application.
   # A software component is a re-usable unit that may be configurable.
   components:
     - component: ARM::CMSIS:CORE
     - component: Device:Startup
+    - component: ARM::CMSIS Driver:SPI:Custom
+    - component: Keil::CMSIS Driver:SPI
+    - component: Keil::Device:DMA
+    - component: Keil::Device:GPIO
 
   # List executable file formats to be generated.
   output:
@@ -18,3 +32,6 @@ project:
       - elf
       - hex
       - map
+  packs:
+    - pack: ARM::CMSIS
+    - pack: Keil::STM32F1xx_DFP
