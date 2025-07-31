@@ -5,16 +5,19 @@ project:
     - group: Source Files
       files:
         - file: ./main.c
-        
+
     - group: ST7789 Library
       files:
         - file: ./libs/st7789/driver_st7789_interface.c
         - file: ./libs/st7789/simple_st7789_driver.c
 
+    - group: Simple USART1 Utils
+      files:
+        - file: ./libs/usart/simple_usart1.c
+
   # Add include paths for libraries
   add-path:
-    - ./libs
-    - ./libs/st7789
+    - ./libs/*
 
   # List components to use for your application.
   # A software component is a re-usable unit that may be configurable.
@@ -25,6 +28,8 @@ project:
     - component: Keil::CMSIS Driver:SPI
     - component: Keil::Device:DMA
     - component: Keil::Device:GPIO
+    - component: ARM::CMSIS Driver:USART:Custom
+    - component: Keil::CMSIS Driver:USART
 
   # List executable file formats to be generated.
   output:
