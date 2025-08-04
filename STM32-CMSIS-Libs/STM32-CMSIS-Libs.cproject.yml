@@ -15,6 +15,10 @@ project:
       files:
         - file: ./libs/usart/simple_usart1.c
 
+    - group: Delay Utils
+      files:
+        - file: ./libs/delay/delay.c
+
   # Add include paths for libraries
   add-path:
     - ./libs/*
