@@ -11,6 +11,7 @@ void SysTick_Handler();
 
 uint32_t delay_get_tick();
 void delay_ms( uint32_t ms );
+void delay_us( uint16_t us );
 bool timer_expired(uint32_t *t, uint32_t prd, uint32_t now);
 
 #endif
