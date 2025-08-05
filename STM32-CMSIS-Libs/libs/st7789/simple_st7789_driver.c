@@ -1,5 +1,7 @@
 #include "simple_st7789_driver.h"
 #include "driver_st7789_interface.h"
+#include "font.h"
+#include "stdlib.h"
 #include "RTE_Components.h"
 #include CMSIS_device_header
 
@@ -289,6 +291,312 @@ uint8_t simple_st7789_test(void)
     if (res != 0) return res;
     
     res = simple_st7789_fill_rect(90, 90, 60, 40, COLOR_MAGENTA);
+    if (res != 0) return res;
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制单个字符
+ * @param x 字符左上角X坐标
+ * @param y 字符左上角Y坐标  
+ * @param c 要绘制的字符
+ * @param fg_color 前景色 (字符颜色)
+ * @param bg_color 背景色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t fg_color, uint16_t bg_color)
+{
+    uint8_t res;
+    const uint8_t *char_data;
+    
+    // 获取字符点阵数据
+    char_data = font_get_char_data(c);
+    if (char_data == NULL) {
+        return 1; // 字符不支持
+    }
+    
+    // 检查边界
+    if (x + FONT_WIDTH > ST7789_WIDTH || y + FONT_HEIGHT > ST7789_HEIGHT) {
+        return 2; // 超出屏幕边界
+    }
+    
+    // 设置绘制窗口
+    res = simple_st7789_set_window(x, y, x + FONT_WIDTH - 1, y + FONT_HEIGHT - 1);
+    if (res != 0) return res;
+    
+    // 开始写入内存
+    res = simple_st7789_send_command(ST7789_RAMWR);
+    if (res != 0) return res;
+    
+    // 逐行绘制字符
+    for (int row = 0; row < FONT_HEIGHT; row++) {
+        uint8_t line_data = char_data[row];
+        
+        // 逐位绘制像素
+        for (int col = 0; col < FONT_WIDTH; col++) {
+            uint16_t pixel_color;
+            
+            // 检查当前位是否为1 (从高位开始)
+            if (line_data & (0x80 >> col)) {
+                pixel_color = fg_color; // 前景色
+            } else {
+                pixel_color = bg_color; // 背景色
+            }
+            
+            // 发送像素颜色数据
+            res = simple_st7789_send_data_16(pixel_color);
+            if (res != 0) return res;
+        }
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制字符串
+ * @param x 字符串左上角X坐标
+ * @param y 字符串左上角Y坐标
+ * @param str 要绘制的字符串
+ * @param fg_color 前景色 (字符颜色)
+ * @param bg_color 背景色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_string(uint16_t x, uint16_t y, const char* str, uint16_t fg_color, uint16_t bg_color)
+{
+    uint8_t res;
+    uint16_t char_x = x;
+    
+    // 逐个绘制字符
+    while (*str != '\0') {
+        // 检查是否需要换行
+        if (char_x + FONT_WIDTH > ST7789_WIDTH) {
+            char_x = x;        // 回到行首
+            y += FONT_HEIGHT;  // 下一行
+            
+            // 检查是否超出屏幕底部
+            if (y + FONT_HEIGHT > ST7789_HEIGHT) {
+                break; // 超出屏幕，停止绘制
+            }
+        }
+        
+        // 绘制单个字符
+        res = simple_st7789_draw_char(char_x, y, *str, fg_color, bg_color);
+        if (res != 0) return res;
+        
+        // 移动到下一个字符位置
+        char_x += FONT_WIDTH;
+        str++;
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制透明字符 (不绘制背景)
+ * @param x 字符左上角X坐标
+ * @param y 字符左上角Y坐标
+ * @param c 要绘制的字符
+ * @param fg_color 前景色 (字符颜色)
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_char_transparent(uint16_t x, uint16_t y, char c, uint16_t fg_color)
+{
+    uint8_t res;
+    const uint8_t *char_data;
+    
+    // 获取字符点阵数据
+    char_data = font_get_char_data(c);
+    if (char_data == NULL) {
+        return 1; // 字符不支持
+    }
+    
+    // 检查边界
+    if (x + FONT_WIDTH > ST7789_WIDTH || y + FONT_HEIGHT > ST7789_HEIGHT) {
+        return 2; // 超出屏幕边界
+    }
+    
+    // 逐行绘制字符
+    for (int row = 0; row < FONT_HEIGHT; row++) {
+        uint8_t line_data = char_data[row];
+        
+        // 逐位绘制像素
+        for (int col = 0; col < FONT_WIDTH; col++) {
+            // 只绘制前景像素，跳过背景像素
+            if (line_data & (0x80 >> col)) {
+                res = simple_st7789_draw_pixel(x + col, y + row, fg_color);
+                if (res != 0) return res;
+            }
+        }
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制透明直线 (只绘制线条，不影响背景)
+ * @param x1 起点X坐标
+ * @param y1 起点Y坐标
+ * @param x2 终点X坐标
+ * @param y2 终点Y坐标
+ * @param color 线条颜色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_line_transparent(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color)
+{
+    uint8_t res;
+    int16_t dx = abs(x2 - x1);
+    int16_t dy = abs(y2 - y1);
+    int16_t sx = (x1 < x2) ? 1 : -1;
+    int16_t sy = (y1 < y2) ? 1 : -1;
+    int16_t err = dx - dy;
+    int16_t x = x1, y = y1;
+    
+    while (1) {
+        // 绘制当前点
+        if (x >= 0 && x < ST7789_WIDTH && y >= 0 && y < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(x, y, color);
+            if (res != 0) return res;
+        }
+        
+        // 检查是否到达终点
+        if (x == x2 && y == y2) break;
+        
+        // Bresenham算法计算下一个点
+        int16_t e2 = 2 * err;
+        if (e2 > -dy) {
+            err -= dy;
+            x += sx;
+        }
+        if (e2 < dx) {
+            err += dx;
+            y += sy;
+        }
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制透明矩形轮廓 (只绘制边框，不填充内部)
+ * @param x 左上角X坐标
+ * @param y 左上角Y坐标
+ * @param width 矩形宽度
+ * @param height 矩形高度
+ * @param color 边框颜色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_rect_outline_transparent(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color)
+{
+    uint8_t res;
+    
+    // 绘制四条边
+    // 上边
+    res = simple_st7789_draw_line_transparent(x, y, x + width - 1, y, color);
+    if (res != 0) return res;
+    
+    // 下边
+    res = simple_st7789_draw_line_transparent(x, y + height - 1, x + width - 1, y + height - 1, color);
+    if (res != 0) return res;
+    
+    // 左边
+    res = simple_st7789_draw_line_transparent(x, y, x, y + height - 1, color);
+    if (res != 0) return res;
+    
+    // 右边
+    res = simple_st7789_draw_line_transparent(x + width - 1, y, x + width - 1, y + height - 1, color);
+    if (res != 0) return res;
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制透明圆形轮廓
+ * @param cx 圆心X坐标
+ * @param cy 圆心Y坐标
+ * @param radius 半径
+ * @param color 圆形颜色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_circle_transparent(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color)
+{
+    uint8_t res;
+    int16_t x = 0;
+    int16_t y = radius;
+    int16_t d = 3 - 2 * radius;
+    
+    // Bresenham圆算法
+    while (x <= y) {
+        // 8个对称点
+        if (cx + x < ST7789_WIDTH && cy + y < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx + x, cy + y, color);
+            if (res != 0) return res;
+        }
+        if (cx - x < ST7789_WIDTH && cy + y < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx - x, cy + y, color);
+            if (res != 0) return res;
+        }
+        if (cx + x < ST7789_WIDTH && cy - y < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx + x, cy - y, color);
+            if (res != 0) return res;
+        }
+        if (cx - x < ST7789_WIDTH && cy - y < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx - x, cy - y, color);
+            if (res != 0) return res;
+        }
+        if (cx + y < ST7789_WIDTH && cy + x < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx + y, cy + x, color);
+            if (res != 0) return res;
+        }
+        if (cx - y < ST7789_WIDTH && cy + x < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx - y, cy + x, color);
+            if (res != 0) return res;
+        }
+        if (cx + y < ST7789_WIDTH && cy - x < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx + y, cy - x, color);
+            if (res != 0) return res;
+        }
+        if (cx - y < ST7789_WIDTH && cy - x < ST7789_HEIGHT) {
+            res = simple_st7789_draw_pixel(cx - y, cy - x, color);
+            if (res != 0) return res;
+        }
+        
+        // 更新算法参数
+        if (d <= 0) {
+            d = d + 4 * x + 6;
+        } else {
+            d = d + 4 * (x - y) + 10;
+            y--;
+        }
+        x++;
+    }
+    
+    return 0;
+}
+
+/**
+ * @brief 绘制透明三角形轮廓
+ * @param x1 第一个顶点X坐标
+ * @param y1 第一个顶点Y坐标
+ * @param x2 第二个顶点X坐标
+ * @param y2 第二个顶点Y坐标
+ * @param x3 第三个顶点X坐标
+ * @param y3 第三个顶点Y坐标
+ * @param color 三角形颜色
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_draw_triangle_transparent(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color)
+{
+    uint8_t res;
+    
+    // 绘制三条边
+    res = simple_st7789_draw_line_transparent(x1, y1, x2, y2, color);
+    if (res != 0) return res;
+    
+    res = simple_st7789_draw_line_transparent(x2, y2, x3, y3, color);
+    if (res != 0) return res;
+    
+    res = simple_st7789_draw_line_transparent(x3, y3, x1, y1, color);
     if (res != 0) return res;
     
     return 0;

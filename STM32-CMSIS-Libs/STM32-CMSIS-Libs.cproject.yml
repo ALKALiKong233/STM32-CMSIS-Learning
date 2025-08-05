@@ -10,6 +10,7 @@ project:
       files:
         - file: ./libs/st7789/driver_st7789_interface.c
         - file: ./libs/st7789/simple_st7789_driver.c
+        - file: ./libs/st7789/font.c
 
     - group: Simple USART1 Utils
       files:

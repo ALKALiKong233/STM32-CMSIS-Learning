@@ -51,4 +51,15 @@ uint8_t simple_st7789_send_command(uint8_t cmd);
 uint8_t simple_st7789_send_data(uint8_t data);
 uint8_t simple_st7789_send_data_16(uint16_t data);
 
+// 字符绘制函数
+uint8_t simple_st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t fg_color, uint16_t bg_color);
+uint8_t simple_st7789_draw_string(uint16_t x, uint16_t y, const char* str, uint16_t fg_color, uint16_t bg_color);
+uint8_t simple_st7789_draw_char_transparent(uint16_t x, uint16_t y, char c, uint16_t fg_color);
+
+// 透明图形绘制函数
+uint8_t simple_st7789_draw_line_transparent(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t color);
+uint8_t simple_st7789_draw_triangle_transparent(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t y2, uint16_t x3, uint16_t y3, uint16_t color);
+uint8_t simple_st7789_draw_circle_transparent(uint16_t cx, uint16_t cy, uint16_t radius, uint16_t color);
+uint8_t simple_st7789_draw_rect_outline_transparent(uint16_t x, uint16_t y, uint16_t width, uint16_t height, uint16_t color);
+
 #endif // SIMPLE_ST7789_DRIVER_H
