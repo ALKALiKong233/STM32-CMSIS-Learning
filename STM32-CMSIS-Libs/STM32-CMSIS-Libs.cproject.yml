@@ -20,6 +20,10 @@ project:
       files:
         - file: ./libs/delay/delay.c
 
+    - group: DHT11 Utils
+      files:
+        - file: ./libs/dht11/dht11.c
+
   # Add include paths for libraries
   add-path:
     - ./libs/*
