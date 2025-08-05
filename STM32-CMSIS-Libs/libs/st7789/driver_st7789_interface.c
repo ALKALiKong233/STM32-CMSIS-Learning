@@ -39,6 +39,7 @@
 #include "RTE_Components.h"
 #include CMSIS_device_header
 #include <stdint.h>
+#include "../delay/delay.h"
 
 extern ARM_DRIVER_SPI Driver_SPI1;
 
@@ -199,13 +200,7 @@ uint8_t st7789_interface_spi_write_cmd(uint8_t *buf, uint16_t len)
  */
 void st7789_interface_delay_ms(uint32_t ms)
 {
-    // 使用简单的循环延时，避免与主程序的SysTick冲突
-    // 假设系统时钟为72MHz，大概的循环次数
-    volatile uint32_t count = ms * 18000; // 大约1ms的延时
-    
-    while (count--) {
-        __NOP(); // ARM的空操作指令
-    }
+    delay_ms(ms);
 }
 
 /**

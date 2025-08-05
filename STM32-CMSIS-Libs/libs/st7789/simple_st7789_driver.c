@@ -6,10 +6,7 @@
 // 延时函数
 static void st7789_delay_ms(uint32_t ms)
 {
-    // 简单的循环延时，基于72MHz主频
-    for (volatile uint32_t i = 0; i < ms * 7200; i++) {
-        __NOP();
-    }
+    st7789_interface_delay_ms(ms);
 }
 
 /**
@@ -161,7 +158,7 @@ uint8_t simple_st7789_init(void)
     res = simple_st7789_send_command(ST7789_NORON);
     if (res != 0) return 11;
     st7789_delay_ms(10);
-    
+
     // 开启显示
     res = simple_st7789_send_command(ST7789_DISPON);
     if (res != 0) return 12;
