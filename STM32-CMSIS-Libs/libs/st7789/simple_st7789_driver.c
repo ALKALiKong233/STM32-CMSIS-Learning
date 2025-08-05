@@ -159,6 +159,11 @@ uint8_t simple_st7789_init(void)
     if (res != 0) return 11;
     st7789_delay_ms(10);
 
+    // 反转颜色
+    res = simple_st7789_send_command(ST7789_INVON);
+    if (res != 0) return 13;
+    st7789_delay_ms(10);
+
     // 开启显示
     res = simple_st7789_send_command(ST7789_DISPON);
     if (res != 0) return 12;
