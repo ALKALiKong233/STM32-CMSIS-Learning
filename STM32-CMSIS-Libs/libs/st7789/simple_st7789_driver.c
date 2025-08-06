@@ -3,6 +3,8 @@
 #include "font.h"
 #include "stdlib.h"
 #include "RTE_Components.h"
+#include <stdint.h>
+#include <string.h>
 #include CMSIS_device_header
 
 // 延时函数
@@ -64,6 +66,23 @@ uint8_t simple_st7789_send_data_16(uint16_t data)
     
     // 发送数据
     res = st7789_interface_spi_write_cmd(data_bytes, 2);
+    return res;
+}
+
+/**
+ * @brief 发送数据缓冲区到ST7789
+ * @param data 数据缓冲区
+ * @return 0=成功, 其他=失败
+ */
+uint8_t simple_st7789_send_data_buf(uint8_t* data, uint32_t len)
+{
+    uint8_t res;
+
+    // 设置DC引脚为数据模式 (高电平)
+    st7789_interface_cmd_data_gpio_write(1);
+    
+    // 发送数据
+    res = st7789_interface_spi_write_cmd(data, len);
     return res;
 }
 
@@ -233,9 +252,18 @@ uint8_t simple_st7789_fill_rect(uint16_t x, uint16_t y, uint16_t width, uint16_t
     if (res != 0) return res;
     
     // 发送颜色数据
-    for (uint32_t i = 0; i < pixel_count; i++) {
-        res = simple_st7789_send_data_16(color);
-        if (res != 0) return res;
+    uint8_t buf[4096];
+    uint32_t buffer_pixels = sizeof(buf) / 2;
+    for ( uint16_t i = 0; i < buffer_pixels && i < pixel_count; ++i ) {
+        buf[i * 2] = (color >> 8) & 0xFF;
+        buf[i * 2 + 1] = color & 0xFF;
+    }
+    uint32_t remaining = pixel_count;
+    while (remaining > 0) {
+        uint32_t to_send = ( remaining >= buffer_pixels ) ? buffer_pixels : remaining;
+        res = simple_st7789_send_data_buf(buf, to_send * 2);
+        if ( res != 0 ) return res;
+        remaining -= to_send;
     }
     
     return 0;

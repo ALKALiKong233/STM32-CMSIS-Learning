@@ -1011,10 +1011,10 @@
 //     <o3> Priority <0=>Low <1=>Medium <2=>High <3=>Very High
 //     <i>  Selects DMA Priority
 //   </e>
-#define RTE_SPI1_RX_DMA                 0
+#define RTE_SPI1_RX_DMA                 1
 #define RTE_SPI1_RX_DMA_NUMBER          1
 #define RTE_SPI1_RX_DMA_CHANNEL         2
-#define RTE_SPI1_RX_DMA_PRIORITY        0
+#define RTE_SPI1_RX_DMA_PRIORITY        2
 
 //   <e> DMA Tx
 //     <o1> Number <1=>1
@@ -1024,10 +1024,10 @@
 //     <o3> Priority <0=>Low <1=>Medium <2=>High <3=>Very High
 //     <i>  Selects DMA Priority
 //   </e>
-#define RTE_SPI1_TX_DMA                 0
+#define RTE_SPI1_TX_DMA                 1
 #define RTE_SPI1_TX_DMA_NUMBER          1
 #define RTE_SPI1_TX_DMA_CHANNEL         3
-#define RTE_SPI1_TX_DMA_PRIORITY        0
+#define RTE_SPI1_TX_DMA_PRIORITY        2
 
 // </e>
 

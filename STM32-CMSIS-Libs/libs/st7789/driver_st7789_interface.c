@@ -74,15 +74,20 @@ static void gpio_init_output(char bank, uint8_t pin) {
 }
 
 // SPI事件回调函数
+static volatile uint8_t spi_transfer_complete = 0;
+
 void SPI1_Event_Callback(uint32_t event) {
     if (event & ARM_SPI_EVENT_TRANSFER_COMPLETE) {
         // SPI传输完成
+        spi_transfer_complete = 1;
     }
     if (event & ARM_SPI_EVENT_DATA_LOST) {
         // 数据丢失错误
+        spi_transfer_complete = 2;  // 错误状态
     }
     if (event & ARM_SPI_EVENT_MODE_FAULT) {
         // 模式错误
+        spi_transfer_complete = 2;  // 错误状态
     }
 }
 
@@ -169,7 +174,7 @@ uint8_t st7789_interface_spi_deinit(void)
  *            - 1 write failed
  * @note      none
  */
-uint8_t st7789_interface_spi_write_cmd(uint8_t *buf, uint16_t len)
+uint8_t st7789_interface_spi_write_cmd(uint8_t *buf, uint32_t len)
 {
     int32_t status;
     GPIO_TypeDef *cs_port = GPIO_PORT(ST7789_CS_PORT);
@@ -177,16 +182,40 @@ uint8_t st7789_interface_spi_write_cmd(uint8_t *buf, uint16_t len)
     // 拉低片选
     GPIO_RESET(cs_port, ST7789_CS_PIN);
     
-    // 发送数据
-    status = Driver_SPI1.Send(buf, len);
-    if (status != ARM_DRIVER_OK) {
-        GPIO_SET(cs_port, ST7789_CS_PIN); // 失败时释放片选
-        return 1;
+    uint32_t remaining = len;
+    uint8_t *buf_ptr = buf;
+
+    while (remaining > 0) {
+        uint32_t to_send = ( remaining > 65535 ) ? 65535 : remaining;
+
+        // 发送数据
+        status = Driver_SPI1.Send(buf_ptr, to_send);
+        if (status != ARM_DRIVER_OK) {
+            GPIO_SET(cs_port, ST7789_CS_PIN); // 失败时释放片选
+            return 1;
+        }
+
+        // 等待传输完成
+        while (spi_transfer_complete == 0) {
+            // 等待DMA传输完成或SPI忙状态结束
+            if (!Driver_SPI1.GetStatus().busy && spi_transfer_complete == 0) {
+                spi_transfer_complete = 1;
+            }
+        }
+            
+        // 检查是否有错误
+        if (spi_transfer_complete == 2) {
+            GPIO_SET(cs_port, ST7789_CS_PIN); // 错误时释放片选
+            return 1;
+        }
+
+        buf_ptr += to_send;
+        remaining -= to_send;
+
+        // 重置传输完成标志
+        spi_transfer_complete = 0;
     }
-    
-    // 等待传输完成
-    while (Driver_SPI1.GetStatus().busy);
-    
+
     // 拉高片选
     GPIO_SET(cs_port, ST7789_CS_PIN);
     
