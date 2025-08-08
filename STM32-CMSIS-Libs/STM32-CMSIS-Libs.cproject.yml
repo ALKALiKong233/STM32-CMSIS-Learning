@@ -24,9 +24,14 @@ project:
       files:
         - file: ./libs/dht11/dht11.c
 
+    - group: ADC Interfaces
+      files:
+        - file: ./interface/adc/adc.c
+
   # Add include paths for libraries
   add-path:
     - ./libs/*
+    - ./interface/*
 
   # List components to use for your application.
   # A software component is a re-usable unit that may be configurable.
