@@ -24,6 +24,10 @@ project:
       files:
         - file: ./libs/dht11/dht11.c
 
+    - group: Console Utils
+      files:
+        - file: ./libs/console/console.c
+
     - group: ADC Interfaces
       files:
         - file: ./interface/adc/adc.c
