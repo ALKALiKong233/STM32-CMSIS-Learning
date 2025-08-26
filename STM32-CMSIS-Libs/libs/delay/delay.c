@@ -1,7 +1,9 @@
 #include "delay.h"
+#include "hal/lv_hal_tick.h"
 #include "stm32f10x.h"
 #include <stdbool.h>
 #include <stdint.h>
+#include "lvgl.h"
 
 /* SysTick */
 volatile uint32_t systick_counter = 0;
@@ -38,6 +40,7 @@ void delay_init() {
 
 void SysTick_Handler() {
     ++systick_counter;
+    lv_tick_inc(1);
 }
 
 uint32_t delay_get_tick() {

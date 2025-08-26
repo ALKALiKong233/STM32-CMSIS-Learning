@@ -253,8 +253,8 @@ project:
 
   # Add include paths for libraries
   add-path:
-    - ./libs/*
-    - ./interface/*
+    - ./libs/
+    - ./interface/
     # LVGL Includes
     - ./libs/lvgl
     - ./libs/lvgl/src
