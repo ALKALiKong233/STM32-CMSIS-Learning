@@ -192,10 +192,10 @@
 //     <o3> Priority <0=>Low <1=>Medium <2=>High <3=>Very high
 //     <i>  Set DMA Channel priority
 //   </e>
-#define RTE_USART1_RX_DMA               0
+#define RTE_USART1_RX_DMA               1
 #define RTE_USART1_RX_DMA_NUMBER        1
 #define RTE_USART1_RX_DMA_CHANNEL       5
-#define RTE_USART1_RX_DMA_PRIORITY      0
+#define RTE_USART1_RX_DMA_PRIORITY      2
 //   <e> DMA Tx
 //     <o1> Number <1=>1
 //     <i>  Selects DMA Number (only DMA1 can be used)
@@ -204,10 +204,10 @@
 //     <o3> Priority <0=>Low <1=>Medium <2=>High <3=>Very high
 //     <i>  Set DMA Channel priority
 //   </e>
-#define RTE_USART1_TX_DMA               0
+#define RTE_USART1_TX_DMA               1
 #define RTE_USART1_TX_DMA_NUMBER        1
 #define RTE_USART1_TX_DMA_CHANNEL       4
-#define RTE_USART1_TX_DMA_PRIORITY      0
+#define RTE_USART1_TX_DMA_PRIORITY      2
 // </e>
 
 
