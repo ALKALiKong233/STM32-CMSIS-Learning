@@ -50,6 +50,7 @@ uint8_t simple_st7789_set_window(uint16_t x1, uint16_t y1, uint16_t x2, uint16_t
 uint8_t simple_st7789_send_command(uint8_t cmd);
 uint8_t simple_st7789_send_data(uint8_t data);
 uint8_t simple_st7789_send_data_16(uint16_t data);
+uint8_t simple_st7789_send_data_buf(uint8_t* buf, uint32_t len);
 
 // 字符绘制函数
 uint8_t simple_st7789_draw_char(uint16_t x, uint16_t y, char c, uint16_t fg_color, uint16_t bg_color);
