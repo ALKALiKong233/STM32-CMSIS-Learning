@@ -160,16 +160,7 @@ static void disp_flush(lv_disp_drv_t * disp_drv, const lv_area_t * area, lv_colo
         
         uint8_t* pixel_data = (uint8_t*)color_p;
         
-        const uint32_t max_chunk_size = 4096;
-        uint32_t remaining = data_size;
-        uint32_t offset = 0;
-        
-        while (remaining > 0) {
-            uint32_t chunk_size = (remaining > max_chunk_size) ? max_chunk_size : remaining;
-            simple_st7789_send_data_buf(pixel_data + offset, chunk_size);
-            offset += chunk_size;
-            remaining -= chunk_size;
-        }
+        simple_st7789_send_data_buf(pixel_data, data_size);
     }
 
     /*IMPORTANT!!!
