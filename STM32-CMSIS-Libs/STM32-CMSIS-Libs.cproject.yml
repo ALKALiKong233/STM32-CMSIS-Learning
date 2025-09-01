@@ -271,6 +271,7 @@ project:
     - component: Keil::Device:GPIO
     - component: ARM::CMSIS Driver:USART:Custom
     - component: Keil::CMSIS Driver:USART
+    - component: CMSIS:RTOS2:Keil RTX5&Source
 
   # List executable file formats to be generated.
   output:
