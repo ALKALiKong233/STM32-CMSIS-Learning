@@ -6,8 +6,17 @@
 #include "stdint.h"
 #include "stdbool.h"
 
+#define USE_CMSIS_OS 1
+
+#if USE_CMSIS_OS
+#include "cmsis_os2.h"
+#endif
+
 void delay_init();
-void SysTick_Handler();
+
+#if USE_CMSIS_OS == 0
+void SysTick_Handler(void);
+#endif
 
 uint32_t delay_get_tick();
 void delay_ms( uint32_t ms );

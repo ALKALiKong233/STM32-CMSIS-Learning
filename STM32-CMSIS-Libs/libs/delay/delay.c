@@ -5,12 +5,17 @@
 #include <stdint.h>
 #include "lvgl.h"
 
+#if USE_CMSIS_OS == 0
 /* SysTick */
 volatile uint32_t systick_counter = 0;
+#endif
+
 volatile bool is_delay_inited = false;
 
 void delay_init() {
     if ( is_delay_inited ) return;
+
+    #if USE_CMSIS_OS == 0
     /* SysTick Init */
     SysTick->CTRL |= SysTick_CTRL_ENABLE |
                     SysTick_CTRL_TICKINT |
@@ -18,6 +23,7 @@ void delay_init() {
     /* Our MCU is at 72MHz, so set load to this for 1ms timer */
     SysTick->LOAD = 72000 - 1;
     SysTick->VAL = 0;
+    #endif
 
     /* TIM6 Init */
     // 使能TIM6时钟
@@ -38,20 +44,30 @@ void delay_init() {
     is_delay_inited = true;
 }
 
+#if USE_CMSIS_OS == 0
 void SysTick_Handler() {
     ++systick_counter;
     lv_tick_inc(1);
 }
+#endif
 
 uint32_t delay_get_tick() {
     if ( !is_delay_inited ) delay_init();
+    #if USE_CMSIS_OS == 0
     return systick_counter;
+    #else
+    return osKernelGetTickCount();
+    #endif
 }
 
 void delay_ms(uint32_t ms) {
     if ( !is_delay_inited ) delay_init();
+    #if USE_CMSIS_OS == 0
     uint32_t start = systick_counter;
     while (systick_counter - start < ms);
+    #else
+    osDelay(ms);
+    #endif
     return;
 }
 
