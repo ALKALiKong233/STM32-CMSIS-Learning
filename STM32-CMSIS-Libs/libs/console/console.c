@@ -2,11 +2,17 @@
 #include "Driver_Common.h"
 #include "Driver_USART.h"
 #include <stdint.h>
+#include <string.h>
 
 extern ARM_DRIVER_USART Driver_USART1;
 static uint8_t rx_buffer[MAX_CHUNK_SIZE];
 static volatile bool rx_complete = false;
 static volatile uint32_t rx_count = 0;
+
+#if USE_CMSIS_OS
+static osMutexAttr_t consoleMutexAttr = { .name = "ConsoleMutex", .attr_bits = osMutexPrioInherit | osMutexRecursive };
+static volatile osMutexId_t consoleMutexId;
+#endif
 
 void USART1_Event_Callback(uint32_t event) {
     if (event & ARM_USART_EVENT_RECEIVE_COMPLETE) {
@@ -39,10 +45,18 @@ void USART1_Init() {
 
 uint8_t console_init() {
     USART1_Init();
+#if USE_CMSIS_OS
+    consoleMutexId = osMutexNew(&consoleMutexAttr);
+    if ( consoleMutexId == NULL ) return 1;
+#endif
     return 0;
 }
 
 int8_t console_info( uint8_t* msg, uint32_t len ) {
+#if USE_CMSIS_OS
+    osStatus_t status = osMutexAcquire(consoleMutexId, osWaitForever);
+    if ( status != osOK ) return status;
+#endif
     int8_t res;
     res = Driver_USART1.Send("[INFO]: ", 8);
     if ( res != ARM_DRIVER_OK ) return res;
@@ -50,10 +64,18 @@ int8_t console_info( uint8_t* msg, uint32_t len ) {
     res = Driver_USART1.Send( msg, len );
     if ( res != ARM_DRIVER_OK ) return res;
     while ( Driver_USART1.GetStatus().tx_busy );
+#if USE_CMSIS_OS
+    osStatus_t releaseStatus = osMutexRelease(consoleMutexId);
+    if ( releaseStatus != osOK ) return releaseStatus;
+#endif
     return res;
 }
 
 int8_t console_debug( uint8_t* msg, uint32_t len ) {
+#if USE_CMSIS_OS
+    osStatus_t status = osMutexAcquire(consoleMutexId, osWaitForever);
+    if ( status != osOK ) return status;
+#endif
     int8_t res;
     res = Driver_USART1.Send("[DEBUG]: ", 9);
     if ( res != ARM_DRIVER_OK ) return res;
@@ -61,10 +83,18 @@ int8_t console_debug( uint8_t* msg, uint32_t len ) {
     res = Driver_USART1.Send( msg, len );
     if ( res != ARM_DRIVER_OK ) return res;
     while ( Driver_USART1.GetStatus().tx_busy );
+#if USE_CMSIS_OS
+    osStatus_t releaseStatus = osMutexRelease(consoleMutexId);
+    if ( releaseStatus != osOK ) return releaseStatus;
+#endif
     return res;
 }
 
 int8_t console_error( uint8_t* msg, uint32_t len ) {
+#if USE_CMSIS_OS
+    osStatus_t status = osMutexAcquire(consoleMutexId, osWaitForever);
+    if ( status != osOK ) return status;
+#endif
     int8_t res;
     res = Driver_USART1.Send("[ERROR]: ", 9);
     if ( res != ARM_DRIVER_OK ) return res;
@@ -72,14 +102,26 @@ int8_t console_error( uint8_t* msg, uint32_t len ) {
     res = Driver_USART1.Send( msg, len );
     if ( res != ARM_DRIVER_OK ) return res;
     while ( Driver_USART1.GetStatus().tx_busy );
+#if USE_CMSIS_OS
+    osStatus_t releaseStatus = osMutexRelease(consoleMutexId);
+    if ( releaseStatus != osOK ) return releaseStatus;
+#endif
     return res;
 }
 
 int8_t console_hex( uint8_t* buf, uint32_t len ) {
+#if USE_CMSIS_OS
+    osStatus_t status = osMutexAcquire(consoleMutexId, osWaitForever);
+    if ( status != osOK ) return status;
+#endif
     int8_t res;
     res = Driver_USART1.Send(buf, len);
     if ( res != ARM_DRIVER_OK ) return res;
     while ( Driver_USART1.GetStatus().tx_busy );
+#if USE_CMSIS_OS
+    osStatus_t releaseStatus = osMutexRelease(consoleMutexId);
+    if ( releaseStatus != osOK ) return releaseStatus;
+#endif
     return res;
 }
 
