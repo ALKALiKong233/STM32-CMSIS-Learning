@@ -2,6 +2,7 @@
 #define LIBS_CONSOLE_H
 
 #include <stdint.h>
+#include "libs_common.h"
 
 #define MAX_CHUNK_SIZE 2048
 

@@ -5,12 +5,7 @@
 #include CMSIS_device_header
 #include "stdint.h"
 #include "stdbool.h"
-
-#define USE_CMSIS_OS 1
-
-#if USE_CMSIS_OS
-#include "cmsis_os2.h"
-#endif
+#include "libs_common.h"
 
 void delay_init();
 
