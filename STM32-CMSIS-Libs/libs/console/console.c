@@ -12,6 +12,8 @@ static volatile uint32_t rx_count = 0;
 #if USE_CMSIS_OS
 static osMutexAttr_t consoleMutexAttr = { .name = "ConsoleMutex", .attr_bits = osMutexPrioInherit | osMutexRecursive };
 static volatile osMutexId_t consoleMutexId;
+static osEventFlagsAttr_t consoleRxEventFlagsAttr = { .name = "ConsoleReceivedNewMsg" };
+static volatile osEventFlagsId_t consoleRxEventFlagsID = NULL;
 #endif
 
 void USART1_Event_Callback(uint32_t event) {
@@ -20,6 +22,9 @@ void USART1_Event_Callback(uint32_t event) {
         rx_count = MAX_CHUNK_SIZE;
         Driver_USART1.Control(ARM_USART_ABORT_RECEIVE, 0);
         Driver_USART1.Receive(rx_buffer, MAX_CHUNK_SIZE);
+#if USE_CMSIS_OS
+        osEventFlagsSet(consoleRxEventFlagsID, CONSOLE_RX_NEW_MSG_EVENT);
+#endif
     }
     
     if (event & ARM_USART_EVENT_RX_TIMEOUT) {
@@ -27,6 +32,9 @@ void USART1_Event_Callback(uint32_t event) {
         rx_complete = true;
         Driver_USART1.Control(ARM_USART_ABORT_RECEIVE, 0);
         Driver_USART1.Receive(rx_buffer, MAX_CHUNK_SIZE);
+#if USE_CMSIS_OS
+        osEventFlagsSet(consoleRxEventFlagsID, CONSOLE_RX_NEW_MSG_EVENT);
+#endif
     }
 }
 
@@ -48,6 +56,8 @@ uint8_t console_init() {
 #if USE_CMSIS_OS
     consoleMutexId = osMutexNew(&consoleMutexAttr);
     if ( consoleMutexId == NULL ) return 1;
+    consoleRxEventFlagsID = osEventFlagsNew(&consoleRxEventFlagsAttr);
+    if ( consoleRxEventFlagsID == NULL ) return 1;
 #endif
     return 0;
 }
@@ -134,3 +144,9 @@ int8_t console_read( uint8_t* buf, uint32_t* len ) {
     rx_complete = 0;
     return 0;
 }
+
+#if USE_CMSIS_OS
+osEventFlagsId_t console_get_rx_event_id() {
+    return consoleRxEventFlagsID;
+}
+#endif

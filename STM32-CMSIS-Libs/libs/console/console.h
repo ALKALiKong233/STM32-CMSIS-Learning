@@ -19,4 +19,9 @@ int8_t console_hex( uint8_t* buf, uint32_t len );
 // Return 0 if a new message is received since last read, -1 if no new msg.
 int8_t console_read( uint8_t* buf, uint32_t* len );
 
+#if USE_CMSIS_OS
+#define CONSOLE_RX_NEW_MSG_EVENT ( 0x01 << 0 )
+osEventFlagsId_t console_get_rx_event_id();
+#endif
+
 #endif
